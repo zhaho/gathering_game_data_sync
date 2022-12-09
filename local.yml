@@ -1,0 +1,46 @@
+- hosts: localhost
+  connection: local
+  become: true
+  vars:
+    logrotate_path: ansible
+    logrotate_conf: |
+          /var/log/ansible {
+              weekly
+              rotate 1
+              size 10M
+              compress
+              missingok
+          }
+  tasks:
+  - blockinfile:
+      path: "/etc/logrotate.d/{{ logrotate_path }}"
+      block: "{{ logrotate_conf }}"
+      create: true
+
+  - name: Create Ansible User
+    user:
+      name: ansible
+      system: yes
+
+  - name: Copy Sudoers
+    copy:
+      src: system/ansible
+      dest: /etc/sudoers.d/ansible
+      owner: root
+      group: root
+      mode: 0440
+
+  - name: Copy Cron Script
+    copy:
+      src: scripts/game_data_to_api
+      dest: /home/ansible/game_data_to_api
+      owner: ansible
+      group: ansible
+      mode: 0770
+
+  - name: Add Cron Job
+    cron:
+      user: ansible
+      name: "ansible provision"
+      minute: "*/15"
+      job: "sudo python3 /home/ansible/game_data_to_api.py"
