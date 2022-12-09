@@ -30,10 +30,25 @@
       group: root
       mode: 0440
 
-  - name: Copy Cron Script
+  - name: Copy Game Data to API Script
     copy:
       src: scripts/game_data_to_api.py
       dest: /home/ansible/game_data_to_api.py
+      owner: ansible
+      group: ansible
+      mode: 0770
+
+  - name: Add Game Data to API Cron
+    cron:
+      user: ansible
+      name: "game data to api script"
+      minute: "*/10"
+      job: "sudo python3 /home/ansible/game_data_to_api.py"
+
+  - name: Copy Cron Script
+    copy:
+      src: scripts/cron.sh
+      dest: /home/ansible/cron.sh
       owner: ansible
       group: ansible
       mode: 0770
@@ -43,4 +58,4 @@
       user: ansible
       name: "ansible provision"
       minute: "*/15"
-      job: "sudo python3 /home/ansible/game_data_to_api.py"
+      job: "sudo bash /home/ansible/cron.sh"
