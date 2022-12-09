@@ -2,8 +2,8 @@ import xmltodict, json
 import requests
 import time
 import logging
-# import ast
-# from operator import itemgetter
+
+# Logging configuration
 logging.basicConfig(filename='/var/log/bgg.log', encoding='utf-8', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 def push_data(games):
@@ -21,23 +21,9 @@ def push_data(games):
         json_object_string = json.dumps(dictionary) # Convert to String
         json_object = json.loads(json_object_string) # Convert JSON to LIST
 
-        #print(json_object)
-        # Sort out information
-        # categories = json_object['boardgames']['boardgame']['boardgamecategory']
-        # category = ""
-        # for cat in categories: 
-        #     category += cat['#text'] + ", "
-
-        # #preferred_players
-        
-        # mechanics = json_object['boardgames']['boardgame']['boardgamemechanic']
-        # mechanic = ""
-        # for mech in mechanics:
-        #     mechanic += str(mech['#text'] + ", ")
-        
-
         # Sets the title 
         title_object = json_object['boardgames']['boardgame']['name']
+
         # Check if it has 2 or more keys
         for obj in title_object:
             try:
@@ -74,13 +60,12 @@ def push_data(games):
 
             mechanic_length = len(mechanic)
             mechanic = mechanic[0:mechanic_length-2]
+
         # Sets Rank
         bgg_rating =  json_object['boardgames']['boardgame']['statistics']['ratings']['average']
         
         # Voters
         bgg_rank_voters =  json_object['boardgames']['boardgame']['statistics']['ratings']['usersrated']
-
-        # BGG Rating (Ratings in different categories)
         
         # Preferred Players        
 
@@ -100,7 +85,6 @@ def push_data(games):
             image = json_object['boardgames']['boardgame']['image']
         else:
             image = " "
-        #print(json_object['boardgames']['boardgame']['image']['poll']['results']['result']['@numvotes'])
 
         # Update the game with the information
         try:
@@ -120,9 +104,6 @@ def push_data(games):
                 "image_url": image
                 }
 
-            #data_dict = ast.literal_eval(json.dumps(gameJson))
-
-            #print(data_dict)
             url = "http://zhaho.com/gathering/app/api/"+object_id
             response = requests.put(url,data=json.dumps(gameJson), headers=headers,timeout=5)
 
@@ -143,7 +124,6 @@ def push_data(games):
         # Wait in order to not overuse the API
         time.sleep(2)
 
-
 # Get list of games from DB
 games_obj_in_db = requests.get('https://zhaho.com/gathering/app/games/get_obj_without_data')
 games = games_obj_in_db.json()
@@ -155,9 +135,3 @@ if len(str(games)) > 2:
     logging.info('Successfully updated games')
 else:
     logging.info('No games to update')
-# Get list of games from DB
-# games_obj_in_db = requests.get('https://zhaho.com/gathering/app/games/get_all_obj')
-# games = games_obj_in_db.json()
-
-# print('Populating games with old data:')
-# push_data(games)
