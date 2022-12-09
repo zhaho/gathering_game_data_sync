@@ -32,8 +32,8 @@
 
   - name: Copy Cron Script
     copy:
-      src: scripts/game_data_to_api
-      dest: /home/ansible/game_data_to_api
+      src: scripts/game_data_to_api.py
+      dest: /home/ansible/game_data_to_api.py
       owner: ansible
       group: ansible
       mode: 0770
