@@ -42,7 +42,7 @@
     cron:
       user: ansible
       name: "game data to api script"
-      minute: "*/10"
+      minute: "*/2"
       job: "sudo python3 /home/ansible/game_data_to_api.py"
 
   - name: Copy Cron Script
