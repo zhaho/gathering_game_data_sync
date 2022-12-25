@@ -1,137 +1,159 @@
-import xmltodict, json
-import requests
-import time
-import logging
+import xmltodict, json, requests, time, logging
 
 # Logging configuration
 logging.basicConfig(filename='/var/log/bgg.log', encoding='utf-8', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
-def push_data(games):
-    # Set headers for post
-    headers = {"Content-Type": "application/json"}
+class game_info:
+    def __init__(self, object_id):
+        self.object_id = object_id
+        self.response = requests.get("https://boardgamegeek.com/xmlapi/boardgame/"+self.object_id+"?stats=1") # Get information of game through BGG API
+        self.dictionary = xmltodict.parse(self.response.content) # Parse the XML to Dict
+        self.json_object_string = json.dumps(self.dictionary) # Convert to String
+        self.json_object = json.loads(self.json_object_string) # Convert JSON to LIST
+       
+    def title(self):
+        title_object = self.json_object['boardgames']['boardgame']['name']
 
-    # Loop the list
-    for obj in games:
-        object_id = obj['object_id']
-        print(object_id)
-
-        # Get info about game from BGG API
-        response = requests.get("https://boardgamegeek.com/xmlapi/boardgame/"+object_id+"?stats=1") # Get information of game through BGG API
-        dictionary = xmltodict.parse(response.content) # Parse the XML to Dict
-        json_object_string = json.dumps(dictionary) # Convert to String
-        json_object = json.loads(json_object_string) # Convert JSON to LIST
-
-        # Sets the title 
-        title_object = json_object['boardgames']['boardgame']['name']
-
-        # Check if it has 2 or more keys
         for obj in title_object:
             try:
                 obj_len = len(obj.keys())
             except:
-                title = json_object['boardgames']['boardgame']['name']['#text']
+                title = self.json_object['boardgames']['boardgame']['name']['#text']
                 obj_len = 0
            
             if obj_len > 2:
                 title = obj['#text']
+        
+        return title
 
+    def category(self):
         # Sets the category
         category = " "
-        if 'boardgamecategory' in  json_object['boardgames']['boardgame']:
-            category_object = json_object['boardgames']['boardgame']['boardgamecategory']
+        if 'boardgamecategory' in  self.json_object['boardgames']['boardgame']:
+            category_object = self.json_object['boardgames']['boardgame']['boardgamecategory']
             for obj in category_object:
                 try:
                     category += obj['#text']+ ", "
                 except:
-                    category = json_object['boardgames']['boardgame']['boardgamecategory']['#text']
+                    category = self.json_object['boardgames']['boardgame']['boardgamecategory']['#text']
 
             category_length = len(category)
-            category = category[0:category_length-2]
-        
+            return str(category[0:category_length-2])
+
+    def mechanic(self):
         # Sets the mechanic
         mechanic = " "
-        if 'boardgamemechanic' in  json_object['boardgames']['boardgame']:
-            mechanic_object = json_object['boardgames']['boardgame']['boardgamemechanic']
+        if 'boardgamemechanic' in  self.json_object['boardgames']['boardgame']:
+            mechanic_object = self.json_object['boardgames']['boardgame']['boardgamemechanic']
             for obj in mechanic_object:
                 try:
                     mechanic += obj['#text']+ ", "
                 except:
-                    mechanic = json_object['boardgames']['boardgame']['boardgamemechanic']['#text']
+                    mechanic = self.json_object['boardgames']['boardgame']['boardgamemechanic']['#text']
 
             mechanic_length = len(mechanic)
-            mechanic = mechanic[0:mechanic_length-2]
+            return str(mechanic[0:mechanic_length-2])
 
+    def bgg_rating(self):
         # Sets Rank
-        bgg_rating =  json_object['boardgames']['boardgame']['statistics']['ratings']['average']
-        
+        return round(int(float(self.json_object['boardgames']['boardgame']['statistics']['ratings']['average'])))
+
+    def bgg_rank_voters(self):
         # Voters
-        bgg_rank_voters =  json_object['boardgames']['boardgame']['statistics']['ratings']['usersrated']
-        
-        # Preferred Players        
+        return int(float(self.json_object['boardgames']['boardgame']['statistics']['ratings']['usersrated']))
 
-        year_published = json_object['boardgames']['boardgame']['yearpublished']
-        minplayers = json_object['boardgames']['boardgame']['minplayers']
-        maxplayers = json_object['boardgames']['boardgame']['maxplayers']
-        playingtime = json_object['boardgames']['boardgame']['playingtime']
-        age = json_object['boardgames']['boardgame']['age']
-        description = json_object['boardgames']['boardgame']['description']
-        
-        if 'thumbnail' in  json_object['boardgames']['boardgame']:
-            thumbnail = json_object['boardgames']['boardgame']['thumbnail']
-        else:
-            thumbnail = " "
+    def year_published(self):
+        return self.json_object['boardgames']['boardgame']['yearpublished']
+    
+    def minplayers(self):
+        return self.json_object['boardgames']['boardgame']['minplayers']
+    
+    def maxplayers(self):
+        return self.json_object['boardgames']['boardgame']['maxplayers']
+    
+    def playtime(self):
+        return self.json_object['boardgames']['boardgame']['playingtime']
 
-        if 'image' in json_object['boardgames']['boardgame']:
-            image = json_object['boardgames']['boardgame']['image']
+    def age(self):
+        return self.json_object['boardgames']['boardgame']['age']
+    
+    def description(self):
+        return self.json_object['boardgames']['boardgame']['description']
+
+    def image(self):
+        if 'image' in self.json_object['boardgames']['boardgame']:
+            image = self.json_object['boardgames']['boardgame']['image']
         else:
             image = " "
+        return image
 
-        # Update the game with the information
-        try:
-            gameJson = {
-                "bgg_rank_voters": int(float(bgg_rank_voters)),
-                "bgg_rating": round(int(float(bgg_rating))),
-                "category": str(category),
-                "mechanic": str(mechanic),
-                "title": title,
-                "year_published": year_published,
-                "minplayers": minplayers,
-                "maxplayers": maxplayers,
-                "playtime": playingtime,
-                "age": age,
-                "description": description,
-                "thumbnail_url": thumbnail,
-                "image_url": image
+    def thumbnail(self):
+        if 'thumbnail' in  self.json_object['boardgames']['boardgame']:
+            thumbnail = self.json_object['boardgames']['boardgame']['thumbnail']
+        else:
+            thumbnail = " "
+        return thumbnail
+
+def update_games(api_url):
+    # Set headers for post
+    headers = {"Content-Type": "application/json"}
+
+    # Fetch games to update
+    games_obj_in_db = requests.get(api_url)
+    games = games_obj_in_db.json()
+
+    logging.info('Game that needs update: '+ str(len(games)))
+
+    # Loop the objects in JSON
+    for obj in games:
+        game = game_info(obj['object_id'])
+        object_id = obj['object_id']
+
+        # Prepare JSON Payload
+        gameJson = {
+                "bgg_rank_voters": game.bgg_rank_voters(),
+                "bgg_rating": game.bgg_rating(),
+                "category": game.category(),
+                "mechanic": game.mechanic(),
+                "title": game.title(),
+                "year_published": game.year_published(),
+                "minplayers": game.minplayers(),
+                "maxplayers": game.maxplayers(),
+                "playtime": game.playtime(),
+                "age": game.age(),
+                "description": game.description(),
+                "thumbnail_url": game.thumbnail(),
+                "image_url": game.image()
                 }
 
+        # Send information to API
+        try:
             url = "http://zhaho.com/gathering/app/api/"+object_id
             response = requests.put(url,data=json.dumps(gameJson), headers=headers,timeout=5)
 
             if(response.status_code == 200):
-                print(object_id+" Updated")
+                logging.info(game.title() + ' successfully updated')
             else:
-                print('ERROR (status_code '+str(response.status_code)+') Failed to update game_obj: '+object_id)
+                logging.error(game.title() + ' failed to update. status_code: '+str(response.status_code))
                 print(json.dumps(gameJson))
         except requests.exceptions.HTTPError as errh:
-            print(errh)
+            logging.error(errh)
         except requests.exceptions.ConnectionError as errc:
-            print(errc)
+            logging.error(errc)
         except requests.exceptions.Timeout as errt:
-            print(errt)
+            logging.error(errt)
         except requests.exceptions.RequestException as err:
-            print(err)
+            logging.error(err)
         
         # Wait in order to not overuse the API
         time.sleep(2)
+    
+    if len(str(games)) > 2:
+        logging.info('Successfully updated games')
+    else:
+        logging.info('No games to update')
 
-# Get list of games from DB
-games_obj_in_db = requests.get('https://zhaho.com/gathering/app/games/get_obj_without_data')
-games = games_obj_in_db.json()
+
+update_games('https://zhaho.com/gathering/app/games/get_obj_without_data')
 
 
-logging.info('Populating games without data:')
-push_data(games)
-if len(str(games)) > 2:
-    logging.info('Successfully updated games')
-else:
-    logging.info('No games to update')
