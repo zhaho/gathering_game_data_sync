@@ -1,4 +1,5 @@
 import xmltodict, json, requests, time, logging
+import xml.etree.ElementTree as ET
 
 # Logging configuration
 logging.basicConfig(filename='/var/log/bgg.log', encoding='utf-8', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -94,6 +95,26 @@ class game_info:
             thumbnail = " "
         return thumbnail
 
+    def preferred_players(self):
+
+        url = 'https://api.geekdo.com/xmlapi/boardgame/'+str(self.object_id)
+
+        response = requests.get(url)
+        root = ET.fromstring(response.content)
+
+        best_numplayers = None
+        highest_value = -1
+
+        for item in root.findall('./boardgame/poll[@name="suggested_numplayers"]/results'):
+            numplayers = item.attrib['numplayers']
+            best = int(item.find('./result[@value="Best"]').attrib['numvotes'])
+            
+            if best > highest_value:
+                highest_value = best
+                best_numplayers = numplayers
+
+        return best_numplayers  
+
 def update_games(api_url):
     # Set headers for post
     headers = {"Content-Type": "application/json"}
@@ -119,6 +140,7 @@ def update_games(api_url):
                 "year_published": game.year_published(),
                 "minplayers": game.minplayers(),
                 "maxplayers": game.maxplayers(),
+                "preferred_players": game.preferred_players(),
                 "playtime": game.playtime(),
                 "age": game.age(),
                 "description": game.description(),
