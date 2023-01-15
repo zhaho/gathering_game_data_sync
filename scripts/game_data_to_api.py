@@ -1,4 +1,4 @@
-import xmltodict, json, requests, time, logging
+import xmltodict, json, requests, time, logging, re
 import xml.etree.ElementTree as ET
 
 # Logging configuration
@@ -102,18 +102,37 @@ class game_info:
         response = requests.get(url)
         root = ET.fromstring(response.content)
 
-        best_numplayers = None
-        highest_value = -1
-
+        best_numplayers = 0
+        highest_value = 0    
         for item in root.findall('./boardgame/poll[@name="suggested_numplayers"]/results'):
-            numplayers = item.attrib['numplayers']
+            numplayers = re.sub("[^0-9]", "", item.attrib['numplayers'])
             best = int(item.find('./result[@value="Best"]').attrib['numvotes'])
-            
             if best > highest_value:
                 highest_value = best
                 best_numplayers = numplayers
 
-        return best_numplayers  
+
+        if best_numplayers == 0:
+            best_numplayers = 0
+            highest_value = 0
+            for item in root.findall('./boardgame/poll[@name="suggested_numplayers"]/results'):
+                numplayers = re.sub("[^0-9]", "", item.attrib['numplayers'])
+                best = int(item.find('./result[@value="Recommended"]').attrib['numvotes'])
+                if best > highest_value:
+                    highest_value = best
+                    best_numplayers = numplayers
+
+
+        return int(best_numplayers)
+    
+    def is_valid(self):
+        try:
+            if self.json_object['boardgames']['boardgame']['error']:
+                return False
+            return True
+        except:
+            return True
+        
 
 def update_games(api_url):
     # Set headers for post
@@ -130,50 +149,56 @@ def update_games(api_url):
         game = game_info(obj['object_id'])
         object_id = obj['object_id']
 
-        # Prepare JSON Payload
-        gameJson = {
-                "bgg_rank_voters": game.bgg_rank_voters(),
-                "bgg_rating": game.bgg_rating(),
-                "category": game.category(),
-                "mechanic": game.mechanic(),
-                "title": game.title(),
-                "year_published": game.year_published(),
-                "minplayers": game.minplayers(),
-                "maxplayers": game.maxplayers(),
-                "preferred_players": game.preferred_players(),
-                "playtime": game.playtime(),
-                "age": game.age(),
-                "description": game.description(),
-                "thumbnail_url": game.thumbnail(),
-                "image_url": game.image()
-                }
+        if game.is_valid():
 
-        # Send information to API
-        try:
-            url = "http://zhaho.com/gathering/app/api/"+object_id
-            response = requests.put(url,data=json.dumps(gameJson), headers=headers,timeout=5)
 
-            if(response.status_code == 200):
-                logging.info(game.title() + ' successfully updated')
-            else:
-                logging.error(game.title() + ' failed to update. status_code: '+str(response.status_code))
-                print(json.dumps(gameJson))
-        except requests.exceptions.HTTPError as errh:
-            logging.error(errh)
-        except requests.exceptions.ConnectionError as errc:
-            logging.error(errc)
-        except requests.exceptions.Timeout as errt:
-            logging.error(errt)
-        except requests.exceptions.RequestException as err:
-            logging.error(err)
+            # Prepare JSON Payload
+            gameJson = {
+                    "bgg_rank_voters": game.bgg_rank_voters(),
+                    "bgg_rating": game.bgg_rating(),
+                    "category": game.category(),
+                    "mechanic": game.mechanic(),
+                    "title": game.title(),
+                    "year_published": game.year_published(),
+                    "minplayers": game.minplayers(),
+                    "maxplayers": game.maxplayers(),
+                    "preferred_players": game.preferred_players(),
+                    "playtime": game.playtime(),
+                    "age": game.age(),
+                    "description": game.description(),
+                    "thumbnail_url": game.thumbnail(),
+                    "image_url": game.image()
+                    }
+
+            print(object_id,' is best on: ',game.preferred_players())
+            # Send information to API
+            try:
+                url = "http://zhaho.com/gathering/app/api/"+object_id
+                response = requests.put(url,data=json.dumps(gameJson), headers=headers,timeout=5)
+                if(response.status_code == 200):
+                    logging.info(game.title() + ' successfully updated')
+                else:
+                    logging.error(game.title() + ' failed to update. status_code: '+str(response.status_code))
+            except requests.exceptions.HTTPError as errh:
+                logging.error(errh)
+            except requests.exceptions.ConnectionError as errc:
+                logging.error(errc)
+            except requests.exceptions.Timeout as errt:
+                logging.error(errt)
+            except requests.exceptions.RequestException as err:
+                logging.error(err)
+            
+            # Wait in order to not overuse the API
+            time.sleep(2)
         
-        # Wait in order to not overuse the API
-        time.sleep(2)
-    
-    if len(str(games)) > 2:
-        logging.info('Successfully updated games')
-    else:
-        logging.info('No games to update')
+        else:
+            logging.info('No data from current game - Skipping')
+
+
+        if len(str(games)) > 2:
+            logging.info('Successfully updated games')
+        else:
+            logging.info('No games to update')
 
 
 update_games('https://zhaho.com/gathering/app/games/get_obj_without_data')
