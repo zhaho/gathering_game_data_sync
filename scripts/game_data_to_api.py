@@ -40,6 +40,8 @@ class game_info:
 
             category_length = len(category)
             return str(category[0:category_length-2])
+        else:
+            return " "
 
     def mechanic(self):
         # Sets the mechanic
@@ -173,7 +175,7 @@ def update_games(api_url):
                     "image_url": game.image()
                     }
 
-            print(object_id,' is best on: ',game.preferred_players())
+            print(gameJson)
             # Send information to API
             try:
                 url = "http://zhaho.com/gathering/app/api/"+object_id
