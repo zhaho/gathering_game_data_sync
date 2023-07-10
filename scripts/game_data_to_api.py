@@ -53,7 +53,10 @@ class game_info:
                     mechanic = self.json_object['boardgames']['boardgame']['boardgamemechanic']['#text']
 
             mechanic_length = len(mechanic)
+            
             return str(mechanic[0:mechanic_length-2])
+        else:
+            return " "
 
     def bgg_rating(self):
         # Sets Rank
@@ -200,7 +203,7 @@ def update_games(api_url):
         else:
             logging.info('No games to update')
 
-
-update_games('https://zhaho.com/gathering/app/games/get_obj_without_data')
+if __name__ == "__main__":
+    update_games('https://zhaho.com/gathering/app/games/get_obj_without_data')
 
 
