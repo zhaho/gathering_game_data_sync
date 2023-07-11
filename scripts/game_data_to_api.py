@@ -175,7 +175,6 @@ def update_games(api_url):
                     "image_url": game.image()
                     }
 
-            print(gameJson)
             # Send information to API
             try:
                 url = "http://zhaho.com/gathering/app/api/"+object_id

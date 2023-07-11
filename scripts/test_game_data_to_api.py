@@ -1,4 +1,3 @@
-import sys
 from game_data_to_api import game_info
 
 game = game_info("307561")
