@@ -1,9 +1,12 @@
 import xmltodict, json, requests, time, logging, re
 import xml.etree.ElementTree as ET
 
+# Variables
+version = "1.2"
+
 # Logging configuration
 logging.basicConfig(filename='/var/log/bgg.log', encoding='utf-8', level=logging.DEBUG, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
+logging.info('Using version: '+version)
 class game_info:
     def __init__(self, object_id):
         self.object_id = object_id
