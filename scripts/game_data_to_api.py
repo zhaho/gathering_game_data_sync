@@ -111,7 +111,11 @@ class game_info:
         highest_value = 0    
         for item in root.findall('./boardgame/poll[@name="suggested_numplayers"]/results'):
             numplayers = re.sub("[^0-9]", "", item.attrib['numplayers'])
-            best = int(item.find('./result[@value="Best"]').attrib['numvotes'])
+            try:
+                best = int(item.find('./result[@value="Best"]').attrib['numvotes'])
+            except:
+                best = 0
+            
             if best > highest_value:
                 highest_value = best
                 best_numplayers = numplayers
@@ -122,11 +126,13 @@ class game_info:
             highest_value = 0
             for item in root.findall('./boardgame/poll[@name="suggested_numplayers"]/results'):
                 numplayers = re.sub("[^0-9]", "", item.attrib['numplayers'])
-                best = int(item.find('./result[@value="Recommended"]').attrib['numvotes'])
+                try:
+                    best = int(item.find('./result[@value="Recommended"]').attrib['numvotes'])
+                except:
+                    best = 0
                 if best > highest_value:
                     highest_value = best
                     best_numplayers = numplayers
-
 
         return int(best_numplayers)
     

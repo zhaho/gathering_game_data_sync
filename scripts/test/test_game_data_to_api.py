@@ -1,6 +1,6 @@
 from game_data_to_api import game_info
 
-game = game_info("307561")
+game = game_info("397614")
 
 print("\nValidating game: " + game.title())
 
@@ -22,4 +22,5 @@ def test_mechanics():
 def test_bgg_rating():
     assert len(str(game.bgg_rating())) > 0
     assert type(game.bgg_rating()) == int
+
 
