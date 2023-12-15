@@ -3,6 +3,8 @@ from game_data_to_api import game_info
 game = game_info("397614")
 
 print("\nValidating game: " + game.title())
+print(game.category())
+print(game.mechanic())
 
 def test_valid():
     assert game.is_valid() == True

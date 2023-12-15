@@ -32,7 +32,7 @@ class game_info:
 
     def category(self):
         # Sets the category
-        category = " "
+        category = ""
         if 'boardgamecategory' in  self.json_object['boardgames']['boardgame']:
             category_object = self.json_object['boardgames']['boardgame']['boardgamecategory']
             for obj in category_object:
@@ -48,7 +48,7 @@ class game_info:
 
     def mechanic(self):
         # Sets the mechanic
-        mechanic = " "
+        mechanic = ""
         if 'boardgamemechanic' in  self.json_object['boardgames']['boardgame']:
             mechanic_object = self.json_object['boardgames']['boardgame']['boardgamemechanic']
             for obj in mechanic_object:
