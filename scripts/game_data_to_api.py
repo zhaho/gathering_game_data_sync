@@ -40,9 +40,7 @@ class game_info:
                     category += obj['#text']+ ", "
                 except:
                     category = self.json_object['boardgames']['boardgame']['boardgamecategory']['#text']
-
-            category_length = len(category)
-            return str(category[0:category_length-2])
+            return str(category.strip(', '))
         else:
             return " "
 
@@ -56,10 +54,7 @@ class game_info:
                     mechanic += obj['#text']+ ", "
                 except:
                     mechanic = self.json_object['boardgames']['boardgame']['boardgamemechanic']['#text']
-
-            mechanic_length = len(mechanic)
-            
-            return str(mechanic[0:mechanic_length-2])
+            return str(mechanic.strip(', '))
         else:
             return " "
 
