@@ -1,4 +1,5 @@
-# gameDataToAPI
+# gathering_game_data_sync
+This repo is deprecated and are now included in the gathering_service repo instead, which include all services for Gathering.
 
 ## API Integration with autoupdate through Ansible Pull
 
